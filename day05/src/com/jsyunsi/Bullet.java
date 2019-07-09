@@ -4,21 +4,18 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
 import java.util.List;
 
 public class Bullet {
 	private static final int WIDTH = 10;
 	private static final int LENGTH = 10;
 	private int x, y;
-	private Direction direction;
+	Direction direction;
 	private int speed = 10;
 	private boolean good;
 	private boolean live = true;
 	private Client c;
-
-	private boolean bJ = false;
-
+	private boolean sm = false;
 	private static Toolkit tk = Toolkit.getDefaultToolkit();
 	private static Image[] images = null;
 	static {
@@ -38,6 +35,7 @@ public class Bullet {
 	}
 
 	public void draw(Graphics g) {
+		
 		if (isLive()) {
 			switch (direction) {
 			case U:
@@ -77,10 +75,12 @@ public class Bullet {
 		case R:
 			x += speed;
 			break;
+		default:
+			break;
 		}
-		if (x<=0 || (x >Client.FRAME_WIDTH))
+		if (x <= 0 || (x > Client.FRAME_WIDTH))
 			this.setLive(false);
-		if((y<=0)|| (y>Client.FRAME_LENGTH))
+		if ((y <= 0) || (y > Client.FRAME_LENGTH))
 			this.setLive(false);
 	}
 
@@ -90,52 +90,62 @@ public class Bullet {
 
 	}
 
-	/*
-	 * public void collidewithBall(Ball ball) { if
-	 * (this.getrect().intersects(ball.getrect())) { this.a.list.remove(ball);
-	 * this.c.score += 10; } }
-	 */
 	public void BcollideWithTank(List<Tank> tanks) {
 		if (good) {
 			for (int i = 0; i < tanks.size(); i++) {
 				Tank t = tanks.get(i);
-				if ((this.getrect().intersects(t.getRect()))) {
-					//坦克爆炸图片集合
-					BombTank bt = new BombTank(tanks.get(i).getX(),tanks.get(i).getY(),this.c);
+				if ((t.isLive())&&(this.getrect().intersects(t.getRect()))) {
+					// 坦克爆炸图片集合
+					BombTank bt = new BombTank(tanks.get(i).getX(), tanks.get(i).getY(), this.c);
 					this.c.bombtanks.add(bt);
-					tanks.remove(i);
+					tanks.get(i).setLive(false);
 					this.setLive(false);
+					this.c.maxtank-=1;
+					// this.c.bullets.remove(this);
 				}
 			}
 		}
 
 	}
 
+	// 老师构造的一个
 	public void BcollideWithHometank2(Tank t) {
-		
-		if ((this.good !=t.isGood())&&(this.getrect().intersects(t.getRect()))){
-			if(!t.isGood()){
-				//w
+
+		if ((t.isLive()) && (this.good != t.isGood()) && (this.getrect().intersects(t.getRect()))) {
+			if (!t.isGood()) {
 				this.c.bullets.remove(this);
 				this.c.tanks.remove(t);
-			}else
-			{
-				
+			} else if (t.isGood()) {
+				this.c.homeTank.setLife(this.c.homeTank.getLife() - 50);
+				this.setLive(false);
 			}
 		}
 
 	}
-	public void BcollideWithHometank(Tank hometank) {
-		if (!good)
-			if (this.getrect().intersects(hometank.getRect())) {
-				this.c.homeTank.setLife(this.c.homeTank.getLife()-1);
+
+	public void BcollideWithHometank(Tank ht) {
+		if ((ht.isLive()) && (this.good != ht.isGood()) && (this.getrect().intersects(ht.getRect()))) {
+			this.c.homeTank.setLife(this.c.homeTank.getLife() - 50);
+			ht.setX(280);ht.setY(560);
+			this.setLive(false);
+			// this.c.bullets.remove(this);
+		}
+	}
+
+	public void BcollidewithMetalwall1(List<MetalWall> wall) {
+		for (int i = 0; i < wall.size(); i++) {
+			if ((this.good) && (this.getrect().intersects(wall.get(i).getRect()))) {
+				wall.remove(i);
 				this.setLive(false);
+				// this.c.bullets.remove(this);
 			}
+		}
 	}
 
 	public void BcollidewithMetalwall(MetalWall wall) {
-		if (this.getrect().intersects(wall.getRect())) {
+		if ((!this.sm) && (this.getrect().intersects(wall.getRect()))) {
 			this.setLive(false);
+			// this.c.bullets.remove(this);
 		}
 	}
 
@@ -144,21 +154,30 @@ public class Bullet {
 			if (this.getrect().intersects(wall.get(i).getRect())) {
 				wall.remove(i);
 				this.setLive(false);
+				// this.c.bullets.remove(this);
 			}
 		}
 	}
 
 	public void BcollidewithB(List<Bullet> bullets) {
 		for (int i = 0; i < bullets.size(); i++) {
-			Bullet b =bullets.get(i);
-			if ((this.good !=b.good) && this!=bullets.get(i)&&(this.getrect().intersects(b.getrect()))) {
+			Bullet b = bullets.get(i);
+			if ((this.good != b.good) && this != bullets.get(i) && (this.getrect().intersects(b.getrect()))) {
 				this.setLive(false);
+				b.setLive(false);
+				// this.c.bullets.remove(this);
 			}
 		}
 	}
-	public void BcollideWithHome(Home home){
-		if(this.getrect().intersects(home.getRect())){
-			this.c.notover=false;
+
+	public void BcollideWithHome(Home home) {
+		if ((home.isLive())&&this.getrect().intersects(home.getRect())) {
+			BombTank bt = new BombTank(home.getX(), home.getY(), this.c);
+			this.c.bombtanks.add(bt);
+			this.c.homeTank.setLive(false);
+			this.c.home.setLive(false);
+			this.setLive(false);
+			// this.c.bullets.remove(this);
 		}
 	}
 
@@ -169,9 +188,17 @@ public class Bullet {
 	public void setLive(boolean live) {
 		this.live = live;
 	}
-	
-	public void bomb(){
-		//BombTank bt = new BombTank()
+
+	public void bomb() {
+		// BombTank bt = new BombTank()
+	}
+
+	public boolean isSm() {
+		return sm;
+	}
+
+	public void setSm(boolean sm) {
+		this.sm = sm;
 	}
 
 }

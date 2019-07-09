@@ -18,13 +18,12 @@ public class Tank {
 	public Direction olddirection = Direction.U;
 	private boolean bL, bU, bR, bD = false;
 	private boolean good;
-	private boolean movea = true;
-	private boolean outr = true, outw = true, outm = true;
-
+	private int tankn = 10;
+	private boolean tankb = true;
 	private int speed = 6;
-	private int speedbad = 6;
-	private int life = 4;
-	
+	private int speedbad = 0;
+	private int life = 200;
+
 	private Client c;
 	private boolean live = true;
 	private static Toolkit tk = Toolkit.getDefaultToolkit();
@@ -42,6 +41,16 @@ public class Tank {
 	}
 
 	public void draw(Graphics g) {
+		if (!tankb) {
+			tankn--;
+		}
+		if (tankn == 0) {
+			tankb = true;
+			tankn = 10;
+		}
+		if (!live) {
+			return;
+		}
 		if (good) {
 			switch (direction) {
 			case U:
@@ -61,13 +70,13 @@ public class Tank {
 				olddirection = direction;
 				break;
 			case S:
-				if (olddirection == direction.U) {
+				if (olddirection == Direction.U) {
 					g.drawImage(images[4], x, y, WIDTH, LENGTH, null);
-				} else if (olddirection == direction.D) {
+				} else if (olddirection == Direction.D) {
 					g.drawImage(images[5], x, y, WIDTH, LENGTH, null);
-				} else if (olddirection == direction.L) {
+				} else if (olddirection == Direction.L) {
 					g.drawImage(images[6], x, y, WIDTH, LENGTH, null);
-				} else if (olddirection == direction.R) {
+				} else if (olddirection == Direction.R) {
 					g.drawImage(images[7], x, y, WIDTH, LENGTH, null);
 				}
 				break;
@@ -100,7 +109,7 @@ public class Tank {
 			default:
 				break;
 			}
-			if ((int)(Math.random()*40)>38) {
+			if ((int) (Math.random() * 40) > 38) {
 				fire();
 			}
 
@@ -158,25 +167,28 @@ public class Tank {
 			bR = true;
 			break;
 		case KeyEvent.VK_J:
-			fire();
+			if (live) {
+				if (tankb) {
+					fire();
+					tankb = false;
+				}
+			}
 		}
 		decideDirection();
 	}
 
-
-
 	private void decideDirection() {
 		// TODO Auto-generated method stub
 		if (bU && !bD && !bL && !bR) {
-			direction = direction.U;
+			direction = Direction.U;
 		} else if (!bU && bD && !bL && !bR) {
-			direction = direction.D;
+			direction = Direction.D;
 		} else if (!bU && !bD && bL && !bR) {
-			direction = direction.L;
+			direction = Direction.L;
 		} else if (!bU && !bD && !bL && bR) {
-			direction = direction.R;
+			direction = Direction.R;
 		} else if (!bU && !bD && !bL && !bR) {
-			direction = direction.S;
+			direction = Direction.S;
 		}
 	}
 
@@ -199,13 +211,13 @@ public class Tank {
 		decideDirection();
 	}
 
-	public Tank(int x, int y, Direction direction, boolean good,Client c) {
+	public Tank(int x, int y, Direction direction, boolean good, Client c) {
 		super();
 		this.x = x;
 		this.y = y;
 		this.direction = direction;
 		this.good = good;
-		this.c=c;
+		this.c = c;
 	}
 
 	public Rectangle getRect() {
@@ -241,19 +253,19 @@ public class Tank {
 	}
 
 	public void tankwithTank(Tank tank) {
-		if (this.getRect().intersects(tank.getRect())) {
+		if (this.isLive() && tank.isLive() && this.getRect().intersects(tank.getRect())) {
 			changeToOldDirection();
 			tank.changeToOldDirection();
 		}
 	}
-	
-	public void collideWithTank(List<Tank> tanks){
+
+	public void collideWithTank(List<Tank> tanks) {
 		for (int i = 0; i < tanks.size(); i++) {
-			Tank t=tanks.get(i);
-			if((this !=t) && (this.getRect().intersects(t.getRect()))){
+			Tank t = tanks.get(i);
+			if (this.isLive() && t.isLive() && (this != t) && (this.getRect().intersects(t.getRect()))) {
 				this.changeToOldDirection();
 				t.changeToOldDirection();
-			
+
 			}
 		}
 	}
@@ -270,6 +282,14 @@ public class Tank {
 		return y;
 	}
 
+	public void setX(int x) {
+		this.x = x;
+	}
+
+	public void setY(int y) {
+		this.y = y;
+	}
+
 	public void setSpeedbad(int speedbad) {
 		this.speedbad = speedbad;
 	}
@@ -278,15 +298,16 @@ public class Tank {
 		x = oldx;
 		y = oldy;
 	}
+
 	public void fire() {
 		// TODO Auto-generated method stub
-		int x =this.x+WIDTH/2 - 5;
-		int y = this.y+LENGTH/2 - 2;
+		int x = this.x + WIDTH / 2 - 5;
+		int y = this.y + LENGTH / 2 - 2;
 		Direction dir = this.direction;
-		if(this.direction==Direction.S)
-			dir=olddirection;
+		if (this.direction == Direction.S)
+			dir = olddirection;
 		boolean good = this.good;
-		this.c.bullets.add(new Bullet(x,y,dir,good,this.c));
+		this.c.bullets.add(new Bullet(x, y, dir, good, this.c));
 	}
 
 	public int getLife() {
@@ -312,7 +333,5 @@ public class Tank {
 	public void setLive(boolean live) {
 		this.live = live;
 	}
-	
-	
 
 }
